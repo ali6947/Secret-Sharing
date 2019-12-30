@@ -171,25 +171,25 @@ class fast_transform:
 
 
 
-gf2r.set_r(10,[10,1,0])
+# gf2r.set_r(10,[10,1,0])
 # z=gf2r([1,0,1])
 # print(W(2,z))
-a=gf2r([0,1,1,1])
+# a=gf2r([0,1,1,1])
 # print(a)
-b=gf2r([0, 0, 1, 1, 0, 1, 1])
-c=gf2r([0,0,0,0,0,0,1,1,1,1,0])
-d=gf2r([1,1,1,0,1,1])
-e=gf2r([0])
-f=gf2r([1])
-g=gf2r([1,1,1,1,1,1,1,0,0,0,1,1,1,1])
-h=gf2r([0,1,0,1,0,1,0,1,1,0,0,1,1,0])
+# b=gf2r([0, 0, 1, 1, 0, 1, 1])
+# c=gf2r([0,0,0,0,0,0,1,1,1,1,0])
+# d=gf2r([1,1,1,0,1,1])
+# e=gf2r([0])
+# f=gf2r([1])
+# g=gf2r([1,1,1,1,1,1,1,0,0,0,1,1,1,1])
+# h=gf2r([0,1,0,1,0,1,0,1,1,0,0,1,1,0])
 #print(c)
 # print(b)
-r=fast_transform(8,4)
-fr=r.ft([a,b,c,d,e,f,g,h])
-for x in fr :
-	print(x)
-print('^')
-bw=r.inverse_ft(fr)
-for x in bw :
-	print(x)
+# r=fast_transform(8,4)
+# fr=r.ft([a,b,c,d,e,f,g,h])
+# for x in fr :
+# 	print(x)
+# print('^')
+# bw=r.inverse_ft(fr)
+# for x in bw :
+# 	print(x)
