@@ -1,13 +1,17 @@
 import numpy as np
+import random
 import fast_arith as fa
 import itertools
+import sys
+sys.setrecursionlimit(10**6)
+
 class gf2r:
 	irr=[]
 	r=None
 	@staticmethod
 	def set_r(x,poly):
 		gf2r.r=x
-		gf2r.irr=poly
+		gf2r.irr=poly #please give poly as  a list of numbers- for eg x^10 + x^2 + 1 is [10,2,1] in any order
 
 	def reduce(self):
 		i=None
@@ -68,7 +72,7 @@ class gf2r:
 		ans=gf2r(list(c))
 		return ans
 		#return gf2r.reduce_and_return(c)
-	def __truediv__(self,other): # p1/p2
+	def __floordiv__(self,other): # p1/p2
 		p1=list(self.val)
 		p1.reverse()
 		p1=list(itertools.dropwhile(lambda x: x==0,p1))
@@ -83,7 +87,7 @@ class gf2r:
 			ans=gf2r(list(self.val))
 			return ans
 		# print(p1)
-		# print(p2)
+		# print(p2)sudo systemctl start openvpn@iitbvpn.service
 		# print('&&')
 		q,r=fa.poly_divmod(p1,p2)
 		#print(q)
@@ -96,6 +100,54 @@ class gf2r:
 		else:
 			ans=gf2r(q1)
 		return ans
+
+	def __mod__(self,other): # p1%p2
+		p1=list(self.val)
+		p1.reverse()
+		p1=list(itertools.dropwhile(lambda x: x==0,p1))
+		if(p1==[]):
+			p1=[0]
+		p2=list(other.val)
+		p2.reverse()
+		p2=list(itertools.dropwhile(lambda x: x==0,p2))
+		if(p2==[]):
+			p2=[0]
+		elif(p2==[1]):
+			ans=gf2r([0]*gf2r.r)
+			return ans
+		# print(p1)
+		# print(p2)sudo systemctl start openvpn@iitbvpn.service
+		# print('&&')
+		q,r=fa.poly_divmod(p1,p2)
+		#print(q)
+		r1=[int(ab)%2 for ab in r ]
+		r1.reverse()
+		#print(r)
+		ans=None
+		if(len(r1)==0):
+			ans=gf2r([0])
+		else:
+			ans=gf2r(r1)
+		return ans
+
+
+	def power(self,p):
+		if p==0:
+			x=[0]*gf2r.r
+			x[0]=1
+			ans=gf2r(x)
+			return ans
+		if p%2==0:
+			a=self.power(p/2)
+			return a*a
+		else:
+			a=self.power((p-1)/2)
+			return (a*a)*self
+	def inv(self):
+		return self.power(int(pow(2,gf2r.r))-2)
+
+	def __truediv__(self,other):
+		return self*(other.inv())
 
 
 	def __str__(self):
@@ -170,26 +222,70 @@ class fast_transform:
 		return ans
 
 
+def generateAllBinaryStrings(n, i):
+	if i == n-1: 
+		return [[1],[0]]  
+    # First assign "0" at ith position  
+    # and try for all other permutations  
+    # for remaining positions  
+	t1=generateAllBinaryStrings(n,i + 1)
+	t2=[x+[1] for x in t1]
+	t3=[x+[0] for x in t1]
+    # And then assign "1" at ith position  
+    # and try for all other permutations  
+    # for remaining positions
+	return t2+t3
 
-# gf2r.set_r(10,[10,1,0])
-# z=gf2r([1,0,1])
-# print(W(2,z))
-# a=gf2r([0,1,1,1])
-# print(a)
-# b=gf2r([0, 0, 1, 1, 0, 1, 1])
+# r=32
+# gf2r.set_r(r,[32,22,2,1,0])
+# h=512
+#b=gf2r([1,0,1,1,1,0,0,0,1])
 # c=gf2r([0,0,0,0,0,0,1,1,1,1,0])
 # d=gf2r([1,1,1,0,1,1])
 # e=gf2r([0])
-# f=gf2r([1])
+#f=gf2r([1,1,1,1,0,1,1])
 # g=gf2r([1,1,1,1,1,1,1,0,0,0,1,1,1,1])
 # h=gf2r([0,1,0,1,0,1,0,1,1,0,0,1,1,0])
-#print(c)
-# print(b)
-# r=fast_transform(8,4)
 # fr=r.ft([a,b,c,d,e,f,g,h])
+# data=[[random.randint(0,1) for i in range(r)] for j in range(h)]
+# coeff=[gf2r(x) for x in data]
+# r1=fast_transform(h,0)
+# pv=r1.ft(coeff)
+# cb=r1.inverse_ft(pv)
+# a=[list(coeff[i].val==cb[i].val) for i in range(h)]
+# fin=True
+# for x in a:
+# 	for y in x:
+# 		fin = fin and y
+# print(fin)
+
+
 # for x in fr :
 # 	print(x)
 # print('^')
 # bw=r.inverse_ft(fr)
 # for x in bw :
 # 	print(x)
+
+# data=generateAllBinaryStrings(r,0)
+# data=data[:-1]
+# coeff=[gf2r(x) for x in data]
+# iv=[x.inv() for x in coeff]
+# on=[coeff[i]*iv[i] for i in range(len(iv))]
+# x=[0]*gf2r.r
+# x[0]=1
+# ans=gf2r(x)
+# fi=[list(x.val==ans.val) for x in on]
+# fin=True 
+# for i in range(len(fi)):
+# 	for j in range(len(fi[i])):
+# 		fin=fin and fi[i][j]
+# print(fin)
+
+
+
+
+
+
+
+
