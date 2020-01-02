@@ -204,7 +204,7 @@ class fast_transform:
 	def inverse_ft(self,vals):
 		lg=int(np.log2(self.h))
 		self.dp[0][0]=vals
-		for i in reversed(range(lg)):
+		for i in range(lg):
 			for m in range(int(pow(2,i))):
 				for b in range(int(self.h/int(pow(2,i+1)))):
 					self.dp[i+1][m+int(pow(2,i))][b]=self.dp[i][m][2*b]+self.dp[i][m][2*b+1]
@@ -219,6 +219,59 @@ class fast_transform:
 		# print(self.dp[lg][2][0])
 		# print(self.dp[lg][3][0])
 		# print('%%')
+		return ans
+
+class differentiation:
+	def __init__(self,h):
+		self.h=h
+		self.nb=int(np.floor(np.log2(h))+1) #number of bits
+		st=[0]*gf2r.r
+		st[0]=1
+		curr=gf2r(st)
+		self.wld=[curr]
+		for i in range(1,self.nb+1):
+			#print("\ni={}".format(i))
+			for j in range(int(pow(2,i-1)),int(pow(2,i))):
+				#print(j,end=' ')
+				x=gf2r(get_bit(j))
+				curr=curr*x
+			y=gf2r(get_bit(int(pow(2,i))))
+			r=curr/W(i,y)
+			self.wld.append(r)
+		self.B=[None]*h
+		self.B[0]=self.wld[0]
+		self.B[1]=self.wld[0]
+		for i in range(1,self.nb-1):
+			print(i)
+			for j in range(0,int(pow(2,i))):
+				print(j+int(pow(2,i)))
+				self.B[j+int(pow(2,i))]=self.B[j]*self.wld[i]
+		for i in self.B:
+			print(i)
+
+	def native_diff(self,coeffs):
+		ans=[]
+		for j in range(len(coeffs)):
+			a=get_bit(j)
+			if(len(a)<self.nb-1):
+				a=a+([0]*(self.nb-1-len(a)))
+			# print(a)
+			zi=[i for i, e in enumerate(a) if e == 0]
+			ts=[self.wld[i]*coeffs[j+int(pow(2,i))] for i in zi]
+			ans.append(sum(ts,gf2r([0]*gf2r.r)))
+		#print('&')
+		return ans
+
+	def fast_diff(self,coeffs):
+		ans=[None]*self.h
+		did=[coeffs[i]*self.B[i] for i in range(self.h)]
+		for j in range(len(coeffs)):
+			a=get_bit(j)
+			if(len(a)<self.nb-1):
+				a=a+([0]*(self.nb-1-len(a)))
+			zi=[i for i, e in enumerate(a) if e == 0]
+			ts=[did[j+int(pow(2,i))] for i in zi]
+			ans[j]=(sum(ts,gf2r([0]*gf2r.r))/self.B[j])
 		return ans
 
 
@@ -236,28 +289,37 @@ def generateAllBinaryStrings(n, i):
     # for remaining positions
 	return t2+t3
 
-# r=32
-# gf2r.set_r(r,[32,22,2,1,0])
-# h=512
-#b=gf2r([1,0,1,1,1,0,0,0,1])
+r=32
+gf2r.set_r(r,[32,22,2,1,0])
+h=128
+# b=gf2r([1,0,1,1,1,0,0,0,1])
 # c=gf2r([0,0,0,0,0,0,1,1,1,1,0])
 # d=gf2r([1,1,1,0,1,1])
-# e=gf2r([0])
-#f=gf2r([1,1,1,1,0,1,1])
+# e=gf2r([0,1,1,1,0,1,1])
+# f=gf2r([1,1,1,1,0,1,1])
 # g=gf2r([1,1,1,1,1,1,1,0,0,0,1,1,1,1])
 # h=gf2r([0,1,0,1,0,1,0,1,1,0,0,1,1,0])
-# fr=r.ft([a,b,c,d,e,f,g,h])
-# data=[[random.randint(0,1) for i in range(r)] for j in range(h)]
-# coeff=[gf2r(x) for x in data]
-# r1=fast_transform(h,0)
-# pv=r1.ft(coeff)
-# cb=r1.inverse_ft(pv)
-# a=[list(coeff[i].val==cb[i].val) for i in range(h)]
-# fin=True
-# for x in a:
-# 	for y in x:
-# 		fin = fin and y
-# print(fin)
+#fr=r.ft([a,b,c,d,e,f,g,h])
+# t=differentiation(8)
+# diff=t.native_diff([b,c,d,e,f,g,h,g])
+# diff2=t.fast_diff([b,c,d,e,f,g,h,g])
+# an1=[list(diff[i].val==diff2[i].val) for i in range(len(diff))]
+# print(an1)
+# for i in diff:
+# 	print(i)
+# print('*')
+# print(e/W(1,gf2r(get_bit(2)))+(gf2r(get_bit(1))*gf2r(get_bit(2))*gf2r(get_bit(3))*g)/W(2,gf2r(get_bit(4))))
+data=[[random.randint(0,1) for i in range(r)] for j in range(h)]
+coeff=[gf2r(x) for x in data]
+r1=fast_transform(h,0)
+cb=r1.inverse_ft(coeff)
+pv=r1.ft(cb)
+a=[list(coeff[i].val==pv[i].val) for i in range(h)]
+fin=True
+for x in a:
+	for y in x:
+		fin = fin and y
+print(fin)
 
 
 # for x in fr :
@@ -281,11 +343,3 @@ def generateAllBinaryStrings(n, i):
 # 	for j in range(len(fi[i])):
 # 		fin=fin and fi[i][j]
 # print(fin)
-
-
-
-
-
-
-
-
