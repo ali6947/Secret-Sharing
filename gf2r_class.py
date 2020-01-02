@@ -1,5 +1,4 @@
 import numpy as np
-from sympy import fwht
 import random
 import fast_arith as fa
 import itertools
@@ -184,9 +183,7 @@ class fast_transform:
 		#to give W(i,omega_(b.2^i)), it has logh +1 rows and h/2^(i+1) columns in row i
 		#print(self.Wib[0])
 		lg=int(np.log2(h))
-		print("hello1")
 		self.dp=[[[None]*(int(h/int(pow(2,i)))) for m in range(int(pow(2,i)))] for i in range(lg+1)]
-		print("hello2")
 		#print(dp[0])
 	def ft(self,coeffs): #list of coeffs
 		lg=int(np.log2(self.h))
@@ -207,7 +204,7 @@ class fast_transform:
 	def inverse_ft(self,vals):
 		lg=int(np.log2(self.h))
 		self.dp[0][0]=vals
-		for i in (range(lg)):
+		for i in range(lg):
 			for m in range(int(pow(2,i))):
 				for b in range(int(self.h/int(pow(2,i+1)))):
 					self.dp[i+1][m+int(pow(2,i))][b]=self.dp[i][m][2*b]+self.dp[i][m][2*b+1]
@@ -215,6 +212,66 @@ class fast_transform:
 		ans=[]
 		for m in range(self.h):
 			ans.append(self.dp[lg][m][0])
+		# print('%%')
+		# print(np.arange(self.h))
+		# print(self.dp[lg][0][0])
+		# print(self.dp[lg][1][0])
+		# print(self.dp[lg][2][0])
+		# print(self.dp[lg][3][0])
+		# print('%%')
+		return ans
+
+class differentiation:
+	def __init__(self,h):
+		self.h=h
+		self.nb=int(np.floor(np.log2(h))+1) #number of bits
+		st=[0]*gf2r.r
+		st[0]=1
+		curr=gf2r(st)
+		self.wld=[curr]
+		for i in range(1,self.nb+1):
+			#print("\ni={}".format(i))
+			for j in range(int(pow(2,i-1)),int(pow(2,i))):
+				#print(j,end=' ')
+				x=gf2r(get_bit(j))
+				curr=curr*x
+			y=gf2r(get_bit(int(pow(2,i))))
+			r=curr/W(i,y)
+			self.wld.append(r)
+		self.B=[None]*h
+		self.B[0]=self.wld[0]
+		self.B[1]=self.wld[0]
+		for i in range(1,self.nb-1):
+			print(i)
+			for j in range(0,int(pow(2,i))):
+				print(j+int(pow(2,i)))
+				self.B[j+int(pow(2,i))]=self.B[j]*self.wld[i]
+		for i in self.B:
+			print(i)
+
+	def native_diff(self,coeffs):
+		ans=[]
+		for j in range(len(coeffs)):
+			a=get_bit(j)
+			if(len(a)<self.nb-1):
+				a=a+([0]*(self.nb-1-len(a)))
+			# print(a)
+			zi=[i for i, e in enumerate(a) if e == 0]
+			ts=[self.wld[i]*coeffs[j+int(pow(2,i))] for i in zi]
+			ans.append(sum(ts,gf2r([0]*gf2r.r)))
+		#print('&')
+		return ans
+
+	def fast_diff(self,coeffs):
+		ans=[None]*self.h
+		did=[coeffs[i]*self.B[i] for i in range(self.h)]
+		for j in range(len(coeffs)):
+			a=get_bit(j)
+			if(len(a)<self.nb-1):
+				a=a+([0]*(self.nb-1-len(a)))
+			zi=[i for i, e in enumerate(a) if e == 0]
+			ts=[did[j+int(pow(2,i))] for i in zi]
+			ans[j]=(sum(ts,gf2r([0]*gf2r.r))/self.B[j])
 		return ans
 
 
@@ -231,113 +288,38 @@ def generateAllBinaryStrings(n, i):
     # and try for all other permutations  
     # for remaining positions
 	return t2+t3
-def find_gen(r,poly,id):
-	i=1
-	while(i<r):
-		cand=gf2r(list(map(int,bin(i)[2:])))
-		j=1
-		fl=1
-		while(j<r-1):
-			if(np.array_equal(cand.power(j).val,id.val)):
-				fl=0
-				break
-			j=j+1
-		if(fl==1):
-			return cand
-			break
-		i=i+1
-def list_to_num(l):
-	s=0
-	po=1
-	for i in range(len(l)):
-		s=s+l[i]*po
-		po=po*2
-	return s
-def num_to_list(n):
-	return list(map(int,bin(n)[2:]))
-		
-def walsh(a,b,n):
-	c=fwht(a)
-	d=fwht(b)
-	f=[(c[i]*d[i])%(n-1) for i in range(len(c))]
-	ans=fwht(f)
-	ans=[ans[i]%(n-1) for i in range(len(ans))]
-	return ans
-def coding(k,n,secrets):
-	# secrets is list of gf2r objects of length k
-	r1=fast_transform(k,0)
-	coeff=r1.inverse_ft(secrets)
-	shares=[]
-	blocks=int(n/k-1)
-	for i in range(blocks):
-		r2=fast_transform(k,(i+1)*k)
-		newblock=r2.ft(coeff)
-		shares=shares+newblock
-	# tmp=shares[32:64]
-	# r2=fast_transform(k,2*k)
-	# coeff2=r2.inverse_ft(tmp)
-	# l=[np.array_equal(coeff[i].val,coeff2[i].val) for i in range(k)]
-	# print(l)
-	return shares
 
-r=10
-n=int(pow(2,r))
-gf2r.set_r(r,[10,3,0])
-# find generator
-# l=[0]*r
-# ident=gf2r([1])
-# g=find_gen(n,gf2r.irr,ident)
-# pog={}
-# lg={}
-# lg[0]=0
-# for i in range(n-1):
-# 	pog[i]=list_to_num(g.power(i).val)
-# 	lg[list_to_num(g.power(i).val)]=i
-# print(pog)
-# print(lg)
-
-# L=[1,2,1,4,3,3,3,2]
-# R=[2,1,3,1,2,1,3,4]
-# print(walsh(L,R,8))
-# fin=[0,0,0,0,0,0,0,0]
-# for i in range(8):
-# 	for j in range(8):
-# 		fin[i]=(fin[i]+R[j]*L[j^i])%7
-# print(fin)
-# print(pog)
-# print(lg)
-# print(len(lg))
-# print(lg[1])
-# coding
-k=32
-data=[[random.randint(0,1) for i in range(r)] for j in range(k)]
-sec=[gf2r(x) for x in data]
-r1=fast_transform(k,0)
-shares=coding(k,n,sec)
-print(len(shares))
-tes2=shares[0:32]
-
-# h=16
+r=32
+gf2r.set_r(r,[32,22,2,1,0])
+h=128
 # b=gf2r([1,0,1,1,1,0,0,0,1])
 # c=gf2r([0,0,0,0,0,0,1,1,1,1,0])
 # d=gf2r([1,1,1,0,1,1])
-# e=gf2r([0])
+# e=gf2r([0,1,1,1,0,1,1])
 # f=gf2r([1,1,1,1,0,1,1])
 # g=gf2r([1,1,1,1,1,1,1,0,0,0,1,1,1,1])
 # h=gf2r([0,1,0,1,0,1,0,1,1,0,0,1,1,0])
-# fr=r.ft([a,b,c,d,e,f,g,h])
-# data=[[random.randint(0,1) for i in range(r)] for j in range(h)]
-# coeff=[gf2r(x) for x in data]
-# r1=fast_transform(h,0)
-# pv=r1.ft(coeff)
-# print(pv)
-# cb=r1.inverse_ft(pv)
-# a=[list(coeff[i].val==cb[i].val) for i in range(h)]
-# fin=True
-# for x in a:
-# 	for y in x:
-# 		fin = fin and y
-# print(fin)
+#fr=r.ft([a,b,c,d,e,f,g,h])
+# t=differentiation(8)
+# diff=t.native_diff([b,c,d,e,f,g,h,g])
+# diff2=t.fast_diff([b,c,d,e,f,g,h,g])
+# an1=[list(diff[i].val==diff2[i].val) for i in range(len(diff))]
+# print(an1)
+# for i in diff:
+# 	print(i)
+# print('*')
+# print(e/W(1,gf2r(get_bit(2)))+(gf2r(get_bit(1))*gf2r(get_bit(2))*gf2r(get_bit(3))*g)/W(2,gf2r(get_bit(4))))
+data=[[random.randint(0,1) for i in range(r)] for j in range(h)]
+coeff=[gf2r(x) for x in data]
+r1=fast_transform(h,0)
+cb=r1.inverse_ft(coeff)
+pv=r1.ft(cb)
+a=[list(coeff[i].val==pv[i].val) for i in range(h)]
+fin=True
+for x in a:
+	for y in x:
+		fin = fin and y
+print(fin)
 
 
 # for x in fr :
@@ -361,11 +343,3 @@ tes2=shares[0:32]
 # 	for j in range(len(fi[i])):
 # 		fin=fin and fi[i][j]
 # print(fin)
-
-
-
-
-
-
-
-
