@@ -398,7 +398,11 @@ print("preprocessing done")
 # print(lg[1])
 # coding
 # print(num_to_list(1023))
+num_secrets=40
+priv_threshold=24
+# k=sec+thresh
 k=64
+# in reality 40 secrets given by user and 24 radomly generated values
 data=[[random.randint(0,1) for i in range(r)] for j in range(k)]
 sec=[gf2r(x) for x in data]
 # seclist=[sec[i].val for i in range(k)]
@@ -415,6 +419,7 @@ print("shares distributed")
 # print()
 # tes2=shares[0:32]
 newshare=[None]*n
+# atleast k should be known
 newshare[2*k:3*k]=shares[k:2*k]
 
 # decoding
@@ -423,12 +428,11 @@ print("decoding started")
 secrets=decoding(k,n,newshare)
 print("decoding done")
 # print(len(secrets))
-secretlist=[secrets[i].val for i in range(n)]
 # # print()
 # # print(secretlist)
 # print()
-l2=[sum(sec[i].val==secrets[i].val) for i in range(k)]
-print(sum(l2)==r*k)
+l2=[sum(sec[i].val==secrets[i].val) for i in range(num_secrets)]
+print(sum(l2)==r*num_secrets)
 # h=16
 # b=gf2r([1,0,1,1,1,0,0,0,1])
 # c=gf2r([0,0,0,0,0,0,1,1,1,1,0])
