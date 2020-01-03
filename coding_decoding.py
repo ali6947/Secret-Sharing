@@ -310,12 +310,13 @@ def list_to_num(l):
 def num_to_list(n):
 	return list(map(int,bin(n)[2:]))[::-1]
 		
-def walsh(a,b,n):
+def walsh(a,b,n,N):
+	inv=N//n
 	c=fwht(a)
 	d=fwht(b)
-	f=[(c[i]*d[i])%(n-1) for i in range(len(c))]
+	f=[(c[i]*d[i])%(N-1) for i in range(len(c))]
 	ans=fwht(f)
-	ans=[ans[i]%(n-1) for i in range(len(ans))]
+	ans=[(ans[i]*inv)%(N-1) for i in range(len(ans))]
 	return ans
 def coding(k,n,secrets):
 	# secrets is list of gf2r objects of length k
@@ -334,22 +335,42 @@ def coding(k,n,secrets):
 	# print(l)
 	# print("hey")
 	return shares
-def decoding(k,n,shares):
+
+
+def decoding(k,n,shares,N):
 	# should be of length n
 	for i in range(n):
 		if(shares[i] is None):
 			R[i]=1
-	w=walsh(L,R,n)
+	w=walsh(L[0:n],R[0:n],n,N)
 	# print(w)
 	# print(R)
 	# print(L)
 	# print(pog)
 	G=[gf2r(num_to_list(pog[w[i]])) for i in range(n)]
-	# l=[G[i].val for i in range(n)]
+	# brute force alternative for G
+	# Gtemp=[0]*n
+	# for i in range(n):
+	# 	if(shares[i] is None):
+	# 		Gtemp[i]=gf2r([1])
+	# 		use=gf2r(num_to_list(i))
+	# 		for j in range(n):
+	# 			if(i==j or shares[j] is not None):
+	# 				continue
+	# 			else:
+	# 				t2=gf2r(num_to_list(j))
+	# 				Gtemp[i]=Gtemp[i]*(t2+use)
+	# 	else:
+	# 		Gtemp[i]=gf2r([1])
+	# 		use=gf2r(num_to_list(i))
+	# 		for j in range(n):
+	# 			if(shares[j] is None):
+	# 				t2=gf2r(num_to_list(j))
+	# 				Gtemp[i]=Gtemp[i]*(t2+use)
+	# # l=[G[i].val for i in range(n)]
 	# print(l)
 	# print("diff printed")
 	H=[gf2r([0]) if shares[i] is None else shares[i]*G[i] for i in range(n)]
-	
 	r=fast_transform(n,0)
 	coeff=r.inverse_ft(H)
 	# r4=fast_transform(n,0)
@@ -369,19 +390,19 @@ def decoding(k,n,shares):
 
 
 r=10
-n=int(pow(2,r))
+N=int(pow(2,r))
 gf2r.set_r(r,[10,3,0])
 # find generator
-L=[0]*n
-R=[0]*n
+L=[0]*N
+R=[0]*N
 ident=gf2r([1])
-g=find_gen(n,gf2r.irr,ident)
-for i in range(n-1):
+g=find_gen(N,gf2r.irr,ident)
+for i in range(N-1):
 	pog[i]=list_to_num(g.power(i).val)
 	lg[list_to_num(g.power(i).val)]=i
 # print(pog)
 # print(lg)
-for i in range(n):
+for i in range(N):
 	L[i]=lg[i]
 print("preprocessing done")
 # L=[1,2,1,4,3,3,3,2]
@@ -402,6 +423,7 @@ num_secrets=40
 priv_threshold=24
 # k=sec+thresh
 k=64
+n=4*k
 # in reality 40 secrets given by user and 24 radomly generated values
 data=[[random.randint(0,1) for i in range(r)] for j in range(k)]
 sec=[gf2r(x) for x in data]
@@ -420,12 +442,12 @@ print("shares distributed")
 # tes2=shares[0:32]
 newshare=[None]*n
 # atleast k should be known
-newshare[2*k:3*k]=shares[k:2*k]
+newshare[k:2*k]=shares[0:k]
 
 # decoding
 # print("hello")
 print("decoding started")
-secrets=decoding(k,n,newshare)
+secrets=decoding(k,n,newshare,N)
 print("decoding done")
 # print(len(secrets))
 # # print()
