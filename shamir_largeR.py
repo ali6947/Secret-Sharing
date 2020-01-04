@@ -339,38 +339,38 @@ def coding(k,n,secrets):
 
 def decoding(k,n,shares,N):
 	# should be of length n
-	for i in range(n):
-		if(shares[i] is None):
-			R[i]=1
-	w=walsh(L[0:n],R[0:n],n,N)
+	# for i in range(n):
+	# 	if(shares[i] is None):
+	# 		R[i]=1
+	# w=walsh(L[0:n],R[0:n],n,N)
 	# print(w)
 	# print(R)
 	# print(L)
 	# print(pog)
-	G=[gf2r(num_to_list(pog[w[i]])) for i in range(n)]
+	# G=[gf2r(num_to_list(pog[w[i]])) for i in range(n)]
 	# brute force alternative for G
-	# Gtemp=[0]*n
-	# for i in range(n):
-	# 	if(shares[i] is None):
-	# 		Gtemp[i]=gf2r([1])
-	# 		use=gf2r(num_to_list(i))
-	# 		for j in range(n):
-	# 			if(i==j or shares[j] is not None):
-	# 				continue
-	# 			else:
-	# 				t2=gf2r(num_to_list(j))
-	# 				Gtemp[i]=Gtemp[i]*(t2+use)
-	# 	else:
-	# 		Gtemp[i]=gf2r([1])
-	# 		use=gf2r(num_to_list(i))
-	# 		for j in range(n):
-	# 			if(shares[j] is None):
-	# 				t2=gf2r(num_to_list(j))
-	# 				Gtemp[i]=Gtemp[i]*(t2+use)
+	Gtemp=[0]*n
+	for i in range(n):
+		if(shares[i] is None):
+			Gtemp[i]=gf2r([1])
+			use=gf2r(num_to_list(i))
+			for j in range(n):
+				if(i==j or shares[j] is not None):
+					continue
+				else:
+					t2=gf2r(num_to_list(j))
+					Gtemp[i]=Gtemp[i]*(t2+use)
+		else:
+			Gtemp[i]=gf2r([1])
+			use=gf2r(num_to_list(i))
+			for j in range(n):
+				if(shares[j] is None):
+					t2=gf2r(num_to_list(j))
+					Gtemp[i]=Gtemp[i]*(t2+use)
 	# # l=[G[i].val for i in range(n)]
 	# print(l)
 	# print("diff printed")
-	H=[gf2r([0]) if shares[i] is None else shares[i]*G[i] for i in range(n)]
+	H=[gf2r([0]) if shares[i] is None else shares[i]*Gtemp[i] for i in range(n)]
 	r=fast_transform(n,0)
 	coeff=r.inverse_ft(H)
 	# r4=fast_transform(n,0)
@@ -382,29 +382,29 @@ def decoding(k,n,shares,N):
 	# print(l)
 	t=differentiation(n)
 	# print("hi")
-	diff=t.native_diff(coeff)
+	diff=t.fast_diff(coeff)
 	rdiff=fast_transform(n,0)
 	value_diff=rdiff.ft(diff)
-	secrets=[value_diff[i]/G[i] if shares[i] is None else shares[i] for i in range(n)]
+	secrets=[value_diff[i]/Gtemp[i] if shares[i] is None else shares[i] for i in range(n)]
 	return secrets
 
 
-r=10
+r=32
 N=int(pow(2,r))
-gf2r.set_r(r,[10,3,0])
+gf2r.set_r(r,[32,22,2,1,0])
 # find generator
-L=[0]*N
-R=[0]*N
-ident=gf2r([1])
-g=find_gen(N,gf2r.irr,ident)
-for i in range(N-1):
-	pog[i]=list_to_num(g.power(i).val)
-	lg[list_to_num(g.power(i).val)]=i
-# print(pog)
-# print(lg)
-for i in range(N):
-	L[i]=lg[i]
-print("preprocessing done")
+# L=[0]*N
+# R=[0]*N
+# ident=gf2r([1])
+# g=find_gen(N,gf2r.irr,ident)
+# for i in range(N-1):
+# 	pog[i]=list_to_num(g.power(i).val)
+# 	lg[list_to_num(g.power(i).val)]=i
+# # print(pog)
+# # print(lg)
+# for i in range(N):
+# 	L[i]=lg[i]
+# print("preprocessing done")
 # L=[1,2,1,4,3,3,3,2]
 # R=[2,1,3,1,2,1,3,4]
 # print(walsh(L,R,8))
