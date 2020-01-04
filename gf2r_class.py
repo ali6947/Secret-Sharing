@@ -28,7 +28,7 @@ class gf2r:
 		while i>=r:
 			for x in gf2r.irr:
 				self.val[x+i-r]=(self.val[x+i-r]+1)%2
-			while self.val[i]==0:
+			while self.val[i]==0 and i>0:
 				i=i-1
 		self.val=self.val[0:r]
 
